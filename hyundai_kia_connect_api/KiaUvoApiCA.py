@@ -22,7 +22,6 @@ from .const import (
     DISTANCE_UNITS,
     DOMAIN,
     ENGINE_TYPES,
-    LOGIN_TOKEN_LIFETIME,
     OrderStatus,
     SEAT_STATUS,
     TEMPERATURE_UNITS,
@@ -36,9 +35,6 @@ from .utils import (
     get_index_into_hex_temp,
     parse_datetime,
 )
-
-
-CIPHERS = "ALL:@SECLEVEL=0"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,12 +116,13 @@ class KiaUvoApiCA(ApiImpl):
         response = response.json()
         self._check_response_for_errors(response)
         response = response["result"]["token"]
+        token_expire_in = int(response['expireIn']) - 60
         access_token = response["accessToken"]
         refresh_token = response["refreshToken"]
         _LOGGER.debug(f"{DOMAIN} - Access Token Value {access_token}")
         _LOGGER.debug(f"{DOMAIN} - Refresh Token Value {refresh_token}")
 
-        valid_until = dt.datetime.now(pytz.utc) + LOGIN_TOKEN_LIFETIME
+        valid_until = dt.datetime.now(pytz.utc) + dt.timedelta(seconds=token_expire_in)
 
         return Token(
             username=username,
